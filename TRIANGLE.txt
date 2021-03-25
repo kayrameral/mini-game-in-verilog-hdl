@@ -1,0 +1,49 @@
+`timescale 1ns / 1ps
+module triangle #(
+    H_SIZE=10,      // triangle half side and half height
+    IX=320,         // initial horizontal position of square centre
+    IY=230,         // initial vertical position of square centre
+    IX_DIR=1,       // initial horizontal direction: 1 is right, 0 is left
+    IY_DIR=1,       // initial vertical direction: 1 is down, 0 is up
+    D_WIDTH=640,    // width of display
+    D_HEIGHT=480,    // height of display
+    SPEED=6
+    )
+    (
+    input wire i_clk,         // base clock
+    input wire i_ani_stb,     // animation clock: pixel clock is 1 pix/frame
+    input wire i_rst,         // reset: returns animation to starting position
+    input wire i_animate,     // animate when input is high
+    output wire [12:0] o_top_x,     // triangle top corner x
+    output wire [12:0] o_top_y,     // triangle top corner y
+    output wire [12:0] o_left_x,    // triangle left (bottom) corner x
+    output wire [12:0] o_bottom_y,    // triangle bottom y
+    output wire [12:0] o_right_x   // triangle right (bottom) corner x
+    );
+
+    reg [12:0] x = IX;   // horizontal position of square centre
+    reg [12:0] y = IY;   // vertical position of square centre
+    reg x_dir = IX_DIR;  // horizontal animation direction
+    reg y_dir = IY_DIR;  // vertical animation direction
+
+    assign o_top_x=x;
+    assign o_top_y=y-H_SIZE;
+    assign o_left_x=x-H_SIZE;
+    assign o_bottom_y=y+H_SIZE;
+    assign o_right_x=x+H_SIZE;
+
+    always @ (posedge i_clk)
+    begin
+        if (i_rst)  // on reset return to starting position
+        begin
+            x <= IX;
+            y <= IY;
+            x_dir <= IX_DIR;
+            y_dir <= IY_DIR;
+        end
+        if (i_animate && i_ani_stb)
+        begin
+            x <= x-SPEED;    
+        end
+    end
+endmodule

@@ -1,0 +1,340 @@
+`timescale 1ns / 1ps
+module top(
+    input wire CLK,             // board clock: 100 MHz on Arty/Basys3/Nexys
+    input wire btnL,            // left button to color switch
+    input wire btnU,            // up button to jump 
+    input wire btnC,            // reset the game
+    output wire VGA_HS_O,       // horizontal sync output
+    output wire VGA_VS_O,       // vertical sync output
+    output wire [3:0] VGA_R,    // 4-bit VGA red output
+    output wire [3:0] VGA_G,    // 4-bit VGA green output
+    output wire [3:0] VGA_B     // 4-bit VGA blue output
+    );
+    
+    wire [9:0] x;  // current pixel x position: 10-bit value: 0-1023
+    wire [8:0] y;  // current pixel y position:  9-bit value: 0-511
+    wire _animate;  // high when we're ready to animate at end of drawing
+    // generate a 25 MHz pixel strobe
+    reg [15:0] cnt = 0;
+    reg pix_stb = 0;
+    always @(posedge CLK) //bu kodda 25MHz lik clock olusturdu.
+        {pix_stb, cnt} <= cnt + 16'h4000;  // divide by 4: (2^16)/4 = 0x4000
+
+    vga640x480 display (
+        .i_clk(CLK),
+        .i_pix_stb(pix_stb),
+        .i_rst(rst),
+        .o_hs(VGA_HS_O), 
+        .o_vs(VGA_VS_O), 
+        .o_x(x), 
+        .o_y(y),
+        .o_animate(_animate)
+    );
+    
+    wire player, line, jump, trig_1, trig_2a,trig_2b, trig_3, trig_4a, trig_4b, trig_5a,trig_5b, trig_6, trig_7, trig_8a, trig_8b, trig_9, trig_10a, trig_10b, trig_10c;
+    wire [12:0] trig_1_upx, trig_1_upy, trig_1_leftx, trig_1_rightx, trig_1_bottomy;
+    wire [12:0] trig_2a_upx, trig_2a_upy, trig_2a_leftx, trig_2a_rightx, trig_2a_bottomy;
+    wire [12:0] trig_2b_upx, trig_2b_upy, trig_2b_leftx, trig_2b_rightx, trig_2b_bottomy;
+    wire [12:0] trig_3_upx, trig_3_upy, trig_3_leftx, trig_3_rightx, trig_3_bottomy;
+    wire [12:0] trig_4a_upx, trig_4a_upy, trig_4a_leftx, trig_4a_rightx, trig_4a_bottomy;
+    wire [12:0] trig_4b_upx, trig_4b_upy, trig_4b_leftx, trig_4b_rightx, trig_4b_bottomy;
+    wire [12:0] trig_5a_upx, trig_5a_upy, trig_5a_leftx, trig_5a_rightx, trig_5a_bottomy;
+    wire [12:0] trig_5b_upx, trig_5b_upy, trig_5b_leftx, trig_5b_rightx, trig_5b_bottomy;
+    wire [12:0] trig_6_upx, trig_6_upy, trig_6_leftx, trig_6_rightx, trig_6_bottomy;
+    wire [12:0] trig_7_upx, trig_7_upy, trig_7_leftx, trig_7_rightx, trig_7_bottomy;
+    wire [12:0] trig_8a_upx, trig_8a_upy, trig_8a_leftx, trig_8a_rightx, trig_8a_bottomy;
+    wire [12:0] trig_8b_upx, trig_8b_upy, trig_8b_leftx, trig_8b_rightx, trig_8b_bottomy;
+    wire [12:0] trig_9_upx, trig_9_upy, trig_9_leftx, trig_9_rightx, trig_9_bottomy;
+    wire [12:0] trig_10a_upx, trig_10a_upy, trig_10a_leftx, trig_10a_rightx, trig_10a_bottomy;
+    wire [12:0] trig_10b_upx, trig_10b_upy, trig_10b_leftx, trig_10b_rightx, trig_10b_bottomy;
+    wire [12:0] trig_10c_upx, trig_10c_upy, trig_10c_leftx, trig_10c_rightx, trig_10c_bottomy;
+    wire [12:0] trig_11_upx, trig_11_upy, trig_11_leftx, trig_11_rightx, trig_11_bottomy;
+    
+    wire [11:0] pl_x1, pl_x2, pl_y1, pl_y2;
+    wire rst;
+    assign rst=btnC;
+    assign jump=btnU;
+    assign animate=_animate & !coldetect;
+    triangle #(.H_SIZE(23), .IX(2200), .IY(217)) trig1 (
+        .i_clk(CLK), 
+        .i_ani_stb(pix_stb),
+        .i_rst(rst),
+        .i_animate(animate),
+        .o_top_x(trig_1_upx),
+        .o_top_y(trig_1_upy),
+        .o_left_x(trig_1_leftx),
+        .o_bottom_y(trig_1_bottomy),
+        .o_right_x(trig_1_rightx)
+    );
+    triangle #(.IX(2750), .IY(217), .H_SIZE(23)) trig2a (
+        .i_clk(CLK), 
+        .i_ani_stb(pix_stb),
+        .i_rst(rst),
+        .i_animate(animate),
+        .o_top_x(trig_2a_upx),
+        .o_top_y(trig_2a_upy),
+        .o_left_x(trig_2a_leftx),
+        .o_bottom_y(trig_2a_bottomy),
+        .o_right_x(trig_2a_rightx)
+    );
+    triangle #(.IX(2750), .IY(171), .H_SIZE(23)) trig2b (
+        .i_clk(CLK), 
+        .i_ani_stb(pix_stb),
+        .i_rst(rst),
+        .i_animate(animate),
+        .o_top_x(trig_2b_upx),
+        .o_top_y(trig_2b_upy),
+        .o_left_x(trig_2b_leftx),
+        .o_bottom_y(trig_2b_bottomy),
+        .o_right_x(trig_2b_rightx)
+    );
+    triangle #(.IX(3300), .IY(217), .H_SIZE(23), .SPEED(10)) trig3 ( //size ucgenin yarý ebatý
+        .i_clk(CLK), 
+        .i_ani_stb(pix_stb),
+        .i_rst(rst),
+        .i_animate(animate),
+        .o_top_x(trig_3_upx),
+        .o_top_y(trig_3_upy),
+        .o_left_x(trig_3_leftx),
+        .o_bottom_y(trig_3_bottomy),
+        .o_right_x(trig_3_rightx)
+    );
+    triangle #(.IX(3700), .IY(217), .H_SIZE(23)) trig4a (
+        .i_clk(CLK), 
+        .i_ani_stb(pix_stb),
+        .i_rst(rst),
+        .i_animate(animate),
+        .o_top_x(trig_4a_upx),
+        .o_top_y(trig_4a_upy),
+        .o_left_x(trig_4a_leftx),
+        .o_bottom_y(trig_4a_bottomy),
+        .o_right_x(trig_4a_rightx)
+    );
+    triangle #(.IX(3700), .IY(171), .H_SIZE(23)) trig4b (
+        .i_clk(CLK), 
+        .i_ani_stb(pix_stb),
+        .i_rst(rst),
+        .i_animate(animate),
+        .o_top_x(trig_4b_upx),
+        .o_top_y(trig_4b_upy),
+        .o_left_x(trig_4b_leftx),
+        .o_bottom_y(trig_4b_bottomy),
+        .o_right_x(trig_4b_rightx)
+    );
+    triangle #(.IX(4500), .IY(217), .H_SIZE(23)) trig5a (
+        .i_clk(CLK), 
+        .i_ani_stb(pix_stb),
+        .i_rst(rst),
+        .i_animate(animate),
+        .o_top_x(trig_5a_upx),
+        .o_top_y(trig_5a_upy),
+        .o_left_x(trig_5a_leftx),
+        .o_bottom_y(trig_5a_bottomy),
+        .o_right_x(trig_5a_rightx)
+    );
+    triangle #(.IX(4500), .IY(171), .H_SIZE(23)) trig5b (
+        .i_clk(CLK), 
+        .i_ani_stb(pix_stb),
+        .i_rst(rst),
+        .i_animate(animate),
+        .o_top_x(trig_5b_upx),
+        .o_top_y(trig_5b_upy),
+        .o_left_x(trig_5b_leftx),
+        .o_bottom_y(trig_5b_bottomy),
+        .o_right_x(trig_5b_rightx)
+    );
+    triangle #(.IX(5050), .IY(217), .H_SIZE(23), .SPEED(10)) trig6 (
+        .i_clk(CLK), 
+        .i_ani_stb(pix_stb),
+        .i_rst(rst),
+        .i_animate(animate),
+        .o_top_x(trig_6_upx),
+        .o_top_y(trig_6_upy),
+        .o_left_x(trig_6_leftx),
+        .o_bottom_y(trig_6_bottomy),
+        .o_right_x(trig_6_rightx)
+    );
+    triangle #(.IX(5450), .IY(217), .H_SIZE(23)) trig7 (
+        .i_clk(CLK), 
+        .i_ani_stb(pix_stb),
+        .i_rst(rst),
+        .i_animate(animate),
+        .o_top_x(trig_7_upx),
+        .o_top_y(trig_7_upy),
+        .o_left_x(trig_7_leftx),
+        .o_bottom_y(trig_7_bottomy),
+        .o_right_x(trig_7_rightx)
+    );
+    triangle #(.IX(5850), .IY(217), .H_SIZE(23)) trig8a (
+        .i_clk(CLK), 
+        .i_ani_stb(pix_stb),
+        .i_rst(rst),
+        .i_animate(animate),
+        .o_top_x(trig_8a_upx),
+        .o_top_y(trig_8a_upy),
+        .o_left_x(trig_8a_leftx),
+        .o_bottom_y(trig_8a_bottomy),
+        .o_right_x(trig_8a_rightx)
+    );
+    triangle #(.IX(5850), .IY(171), .H_SIZE(23)) trig8b (
+        .i_clk(CLK), 
+        .i_ani_stb(pix_stb),
+        .i_rst(rst),
+        .i_animate(animate),
+        .o_top_x(trig_8b_upx),
+        .o_top_y(trig_8b_upy),
+        .o_left_x(trig_8b_leftx),
+        .o_bottom_y(trig_8b_bottomy),
+        .o_right_x(trig_8b_rightx)
+    );
+    
+    triangle #(.IX(6550), .IY(148), .H_SIZE(23),.SPEED(15)) trig9 (
+        .i_clk(CLK), 
+        .i_ani_stb(pix_stb),
+        .i_rst(rst),
+        .i_animate(animate),
+        .o_top_x(trig_9_upx),
+        .o_top_y(trig_9_upy),
+        .o_left_x(trig_9_leftx),
+        .o_bottom_y(trig_9_bottomy),
+        .o_right_x(trig_9_rightx)
+    );
+    
+    triangle #(.IX(7850), .IY(217), .H_SIZE(23), .SPEED(15)) trig10a (
+        .i_clk(CLK), 
+        .i_ani_stb(pix_stb),
+        .i_rst(rst),
+        .i_animate(animate),
+        .o_top_x(trig_10a_upx),
+        .o_top_y(trig_10a_upy),
+        .o_left_x(trig_10a_leftx),
+        .o_bottom_y(trig_10a_bottomy),
+        .o_right_x(trig_10a_rightx)
+    );
+    triangle #(.IX(7850), .IY(171), .H_SIZE(23), .SPEED(4) ) trig10b (
+        .i_clk(CLK), 
+        .i_ani_stb(pix_stb),
+        .i_rst(rst),
+        .i_animate(animate),
+        .o_top_x(trig_10b_upx),
+        .o_top_y(trig_10b_upy),
+        .o_left_x(trig_10b_leftx),
+        .o_bottom_y(trig_10b_bottomy),
+        .o_right_x(trig_10b_rightx)
+    );
+    triangle #(.IX(7850), .IY(125), .H_SIZE(23), .SPEED(11)) trig10c (
+        .i_clk(CLK), 
+        .i_ani_stb(pix_stb),
+        .i_rst(rst),
+        .i_animate(animate),
+        .o_top_x(trig_10c_upx),
+        .o_top_y(trig_10c_upy),
+        .o_left_x(trig_10c_leftx),
+        .o_bottom_y(trig_10c_bottomy),
+        .o_right_x(trig_10c_rightx)
+    );
+     triangle #(.IX(7850), .IY(169), .H_SIZE(22), .SPEED(14) ) trig11 (
+           .i_clk(CLK), 
+           .i_ani_stb(pix_stb),
+           .i_rst(rst),
+           .i_animate(animate),
+           .o_top_x(trig_11_upx),
+           .o_top_y(trig_11_upy),
+           .o_left_x(trig_11_leftx),
+           .o_bottom_y(trig_11_bottomy),
+           .o_right_x(trig_11_rightx)
+       );
+    square #(.IX(34), .IY(216), .H_SIZE(24)) _player (
+        .i_clk(CLK), 
+        .i_ani_stb(pix_stb),
+        .i_rst(rst),
+        .i_animate(animate),
+        .i_jump(jump),
+        .o_x1(pl_x1),
+        .o_x2(pl_x2),
+        .o_y1(pl_y1),
+        .o_y2(pl_y2)
+    );
+    //sekillerin cýkmasýný saðladýk
+    assign trig_1 = ( (y<trig_1_bottomy) & (y>2*x-2*trig_1_rightx+trig_1_bottomy) & (y>-2*x+2*trig_1_leftx+trig_1_bottomy)) ? 1 : 0;
+    assign trig_2a = ( (y<trig_2a_bottomy) & (y>2*x-2*trig_2a_rightx+trig_2a_bottomy) & (y>-2*x+2*trig_2a_leftx+trig_2a_bottomy)) ? 1 : 0;
+    assign trig_2b = ( (y<trig_2b_bottomy) & (y>2*x-2*trig_2b_rightx+trig_2b_bottomy) & (y>-2*x+2*trig_2b_leftx+trig_2b_bottomy)) ? 1 : 0;
+    assign trig_3 = ( (y<trig_3_bottomy) & (y>2*x-2*trig_3_rightx+trig_3_bottomy) & (y>-2*x+2*trig_3_leftx+trig_3_bottomy)) ? 1 : 0;
+    assign trig_4a = ( (y<trig_4a_bottomy) & (y>2*x-2*trig_4a_rightx+trig_4a_bottomy) & (y>-2*x+2*trig_4a_leftx+trig_4a_bottomy)) ? 1 : 0;
+    assign trig_4b = ( (y<trig_4b_bottomy) & (y>2*x-2*trig_4b_rightx+trig_4b_bottomy) & (y>-2*x+2*trig_4b_leftx+trig_4b_bottomy)) ? 1 : 0;
+    assign trig_5a = ( (y<trig_5a_bottomy) & (y>2*x-2*trig_5a_rightx+trig_5a_bottomy) & (y>-2*x+2*trig_5a_leftx+trig_5a_bottomy)) ? 1 : 0;
+    assign trig_5b = ( (y<trig_5b_bottomy) & (y>2*x-2*trig_5b_rightx+trig_5b_bottomy) & (y>-2*x+2*trig_5b_leftx+trig_5b_bottomy)) ? 1 : 0;
+    assign trig_6 = ( (y<trig_6_bottomy) & (y>2*x-2*trig_6_rightx+trig_6_bottomy) & (y>-2*x+2*trig_6_leftx+trig_6_bottomy)) ? 1 : 0;
+    assign trig_7 = ( (y<trig_7_bottomy) & (y>2*x-2*trig_7_rightx+trig_7_bottomy) & (y>-2*x+2*trig_7_leftx+trig_7_bottomy)) ? 1 : 0;
+    assign trig_8a = ( (y<trig_8a_bottomy) & (y>2*x-2*trig_8a_rightx+trig_8a_bottomy) & (y>-2*x+2*trig_8a_leftx+trig_8a_bottomy)) ? 1 : 0;
+    assign trig_8b = ( (y<trig_8b_bottomy) & (y>2*x-2*trig_8b_rightx+trig_8b_bottomy) & (y>-2*x+2*trig_8b_leftx+trig_8b_bottomy)) ? 1 : 0;
+    assign trig_9 = ( (y<trig_9_bottomy) & (y>2*x-2*trig_9_rightx+trig_9_bottomy) & (y>-2*x+2*trig_9_leftx+trig_9_bottomy)) ? 1 : 0;
+    assign trig_10a = ( (y<trig_10a_bottomy) & (y>2*x-2*trig_10a_rightx+trig_10a_bottomy) & (y>-2*x+2*trig_10a_leftx+trig_10a_bottomy)) ? 1 : 0;
+    assign trig_10b = ( (y<trig_10b_bottomy) & (y>2*x-2*trig_10b_rightx+trig_10b_bottomy) & (y>-2*x+2*trig_10b_leftx+trig_10b_bottomy)) ? 1 : 0;
+    assign trig_10c = ( (y<trig_10c_bottomy) & (y>2*x-2*trig_10c_rightx+trig_10c_bottomy) & (y>-2*x+2*trig_10c_leftx+trig_10c_bottomy)) ? 1 : 0;
+    assign trig_11 = ( (y<trig_11_bottomy) & (y>2*x-2*trig_11_rightx+trig_11_bottomy) & (y>-2*x+2*trig_11_leftx+trig_11_bottomy)) ? 1 : 0;
+    assign player = ( (x>pl_x1) & (x<pl_x2) & (y>pl_y1) & (y<pl_y2) ) ? 1 : 0;
+    assign line = ( (y>=240) & (y<250) ) ? 1:0;
+    reg [1:0] playercolor=1;
+    reg idealbtnL=0, bayrak=1;
+    reg player_white,player_orange,player_blue;
+    always@(posedge CLK) begin //bayrak tus basýlý deðil demek.
+        idealbtnL=0;
+        if(btnL && bayrak) begin
+            bayrak=0;
+            idealbtnL=1;
+        end
+        else if(!btnL) begin
+            bayrak=1;
+        end
+        if(idealbtnL==1 && !coldetect) begin
+            playercolor=playercolor+1;
+            if(playercolor==0) playercolor=1;
+        end
+        if(playercolor==1) begin //1=orange 2=blue 3=white
+            player_orange=1;
+            player_blue=0;
+            player_white=0;
+        end
+        else if(playercolor==2) begin
+           player_orange=0;
+           player_blue=1;
+           player_white=0;
+        end
+        else if(playercolor==3) begin
+           player_orange=0;
+           player_blue=0;
+           player_white=1;
+        end
+    end
+    wire coldetect;
+    assign coldetect=
+    (((pl_x2>trig_1_leftx & pl_x1<trig_1_rightx) & (pl_y2>trig_1_upy) & (playercolor!=3))
+    | ((pl_x2>trig_2a_leftx & pl_x1<trig_2a_rightx) & (pl_y2>trig_2a_upy) & (playercolor!=1))
+    | ((pl_x2>trig_2b_leftx & pl_x1<trig_2b_rightx) & (pl_y2>trig_2b_upy) & (playercolor!=1))
+    | ((pl_x2>trig_3_leftx & pl_x1<trig_3_rightx) & (pl_y2>trig_3_upy) & (playercolor!=3))
+    | ((pl_x2>trig_4a_leftx & pl_x1<trig_4a_rightx) & (pl_y2>trig_4a_upy) & (playercolor!=3))
+    | ((pl_x2>trig_4b_leftx & pl_x1<trig_4b_rightx) & (pl_y2>trig_4b_upy) & (playercolor!=2))
+    | ((pl_x2>trig_5a_leftx & pl_x1<trig_5a_rightx) & (pl_y2>trig_5a_upy) & (playercolor!=2))
+    | ((pl_x2>trig_5b_leftx & pl_x1<trig_5b_rightx) & (pl_y2>trig_5b_upy) & (playercolor!=1))
+    | ((pl_x2>trig_6_leftx & pl_x1<trig_6_rightx) & (pl_y2>trig_6_upy) & (playercolor!=3))
+    | ((pl_x2>trig_7_leftx & pl_x1<trig_7_rightx) & (pl_y2>trig_7_upy) & (playercolor!=2))
+    | ((pl_x2>trig_8a_leftx & pl_x1<trig_8a_rightx) & (pl_y2>trig_8a_upy) & (playercolor!=2))
+    | ((pl_x2>trig_8b_leftx & pl_x1<trig_8b_rightx) & (pl_y2>trig_8b_upy) & (playercolor!=3))
+    | ((pl_x2>trig_9_leftx & pl_x1<trig_9_rightx) & (pl_y2>trig_9_upy) & (pl_y1<trig_9_bottomy) & (playercolor!=2))
+    | ((pl_x2>trig_10a_leftx & pl_x1<trig_10a_rightx) & (pl_y2>trig_10a_upy) &(pl_y1<trig_10a_bottomy)& (playercolor!=1))
+    | ((pl_x2>trig_10b_leftx & pl_x1<trig_10b_rightx) & (pl_y2>trig_10b_upy)&(pl_y1<trig_10b_bottomy) & (playercolor!=2))
+    | ((pl_x2>trig_10c_leftx & pl_x1<trig_10c_rightx) & (pl_y2>trig_10c_upy)&(pl_y1<trig_10c_bottomy) & (playercolor!=1)))
+    | ((pl_x2>trig_11_leftx & pl_x1<trig_11_rightx) & (pl_y2>trig_11_upy)&(pl_y1<trig_11_bottomy) & (playercolor!=3))
+    ? 1 : 0;
+    wire white,orange,blue;
+    assign white=trig_1|trig_3|trig_4a|trig_6|trig_8b| trig_11| (player_white & player);
+    assign orange=trig_2a|trig_2b|trig_5b|trig_10a|trig_10c|(player_orange & player);
+    assign blue=trig_4b|trig_5a|trig_7|trig_8a|trig_9|trig_10b|(player_blue & player);
+    assign VGA_R = 15*(line|orange|white);
+    assign VGA_G[3]=(line|white);
+    assign VGA_G[2]=(line|white);
+    assign VGA_G[1]=(line|orange|white|blue);
+    assign VGA_G[0]=(line|orange|white|blue);
+    assign VGA_B = 15*(line|white|blue);
+endmodule
